@@ -16,7 +16,7 @@ app.set("trust proxy", 1);
 // ✅ Middleware
 app.use(
   cors({
-    origin: "https://vocal-lolly-58a230.netlify.app",
+    origin: "https://lighthearted-creponne-72f33b.netlify.app",
     credentials: true
   })
 ); // IMPORTANT for Netlify ↔ Render
