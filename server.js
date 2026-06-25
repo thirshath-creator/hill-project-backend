@@ -12,9 +12,14 @@ const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
 const app = express(); // ✅ CREATE APP FIRST
-
+app.set("trust proxy", 1);
 // ✅ Middleware
-app.use(cors()); // IMPORTANT for Netlify ↔ Render
+app.use(
+  cors({
+    origin: "https://vocal-lolly-58a230.netlify.app",
+    credentials: true
+  })
+); // IMPORTANT for Netlify ↔ Render
 app.use(express.json());
 
 app.use(
@@ -27,6 +32,7 @@ app.use(
 const SESSION_SECRET =
   process.env.SESSION_SECRET || "hilfarm_local_dev_secret_change_this";
 
+
 app.use(
   session({
     secret: SESSION_SECRET,
@@ -34,12 +40,13 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // keep false for now (HTTP on Render)
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 1000 * 60 * 60 * 8
     }
   })
 );
+
 
 // ✅ Rate limiter (login protection)
 const loginLimiter = rateLimit({
