@@ -1,0 +1,43 @@
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL UNIQUE,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'user',
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  approved_by INTEGER,
+  approved_at TEXT,
+  last_login TEXT,
+  failed_login_count INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS login_audit (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  username TEXT,
+  email TEXT,
+  login_time TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  ip_address TEXT,
+  user_agent TEXT,
+  success INTEGER NOT NULL,
+  reason TEXT
+);
+
+CREATE TABLE IF NOT EXISTS admin_audit (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  admin_id INTEGER NOT NULL,
+  target_user_id INTEGER NOT NULL,
+  action TEXT NOT NULL,
+  timestamp TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  remarks TEXT
+);
+CREATE TABLE IF NOT EXISTS approval_tokens (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  token TEXT NOT NULL UNIQUE,
+  action TEXT NOT NULL,
+  used INTEGER NOT NULL DEFAULT 0,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
