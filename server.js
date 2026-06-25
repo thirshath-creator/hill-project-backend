@@ -1,8 +1,3 @@
-
-const cors = require("cors");
-app.use(cors());
-
-
 require("dotenv").config();
 
 const express = require("express");
@@ -10,17 +5,17 @@ const path = require("path");
 const session = require("express-session");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const cors = require("cors");
 
 const { initDatabase } = require("./db/database");
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
-const app = express();
+const app = express(); // ✅ CREATE APP FIRST
 
-const SESSION_SECRET =
-  process.env.SESSION_SECRET || "hilfarm_local_dev_secret_change_this";
-
-const frontendRoot = path.join(__dirname, "..");
+// ✅ Middleware
+app.use(cors()); // IMPORTANT for Netlify ↔ Render
+app.use(express.json());
 
 app.use(
   helmet({
@@ -28,7 +23,9 @@ app.use(
   })
 );
 
-app.use(express.json());
+// ✅ Session config
+const SESSION_SECRET =
+  process.env.SESSION_SECRET || "hilfarm_local_dev_secret_change_this";
 
 app.use(
   session({
@@ -37,13 +34,14 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false,
+      secure: false, // keep false for now (HTTP on Render)
       sameSite: "lax",
       maxAge: 1000 * 60 * 60 * 8
     }
   })
 );
 
+// ✅ Rate limiter (login protection)
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -52,17 +50,17 @@ const loginLimiter = rateLimit({
   }
 });
 
+// ✅ Routes
 app.use("/api/auth/login", loginLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 
-/*
-  Page routes are defined before static serving
-  so index.html and admin.html can be protected.
-*/
+// ✅ Frontend root (served if needed)
+const frontendRoot = path.join(__dirname, "..");
 
+// ✅ Page routes
 app.get("/", (req, res) => {
-  res.sendFile(path.join(frontendRoot, "login.html"));
+  res.send("Backend is running ✅"); // simple test response
 });
 
 app.get("/login.html", (req, res) => {
@@ -93,21 +91,24 @@ app.get("/admin.html", (req, res) => {
   return res.sendFile(path.join(frontendRoot, "admin.html"));
 });
 
-/*
-  Serve frontend assets:
-  style.css, script.js, images, etc.
-*/
+// ✅ Static files
 app.use(express.static(frontendRoot));
 
+// ✅ Start server
 async function startServer() {
-  await initDatabase();
+  try {
+    await initDatabase();
 
-  const PORT = process.env.PORT || 4000;
+    const PORT = process.env.PORT || 5001; // ✅ IMPORTANT FIX
 
-  app.listen(PORT, () => {
-    console.log(`HIL Farm backend running at http://localhost:${PORT}`);
-    console.log(`Login page: http://localhost:${PORT}/login.html`);
-  });
+    app.listen(PORT, () => {
+      console.log(`✅ Server running on port ${PORT}`);
+    });
+
+  } catch (err) {
+    console.error("❌ Failed to start server:", err);
+    process.exit(1); // stop crash loop properly
+  }
 }
 
 startServer();
